@@ -1,10 +1,16 @@
-import { TEvent } from "@/lib/types"
+"use client"
+
+import { TEvent } from "@prisma/client"
+import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image"
 import Link from "next/link";
+import { useRef } from "react";
 
 type EventCardProp = {
     event: TEvent
 }
+
+const MotionLink = motion(Link)
 
 export default function EventCard({event}: EventCardProp) {
     const formattedDate = new Date(event.date).toLocaleDateString("en-US", {
@@ -12,10 +18,30 @@ export default function EventCard({event}: EventCardProp) {
       month: "short",
     });
 
+    const ref = useRef(null)
+    const { scrollYProgress } = useScroll({
+      target: ref,
+      offset: ["0 1", "1.5 1"],
+    });
+    const scaleProgress = useTransform(scrollYProgress, [0, 1], [0.8, 1]);
+    const opacityProgress = useTransform(scrollYProgress, [0, 1], [0.3, 1]);
+
+
  return (
-   <Link
+   <MotionLink
+     ref={ref}
      href={`/event/${event.slug}`}
      className="hover:scale-105 active:scale-105 transition"
+     style={{
+       // @ts-ignore
+       scale: scaleProgress,
+       // @ts-ignore
+       opacity: opacityProgress,
+     }}
+     initial={{
+       opacity: 0,
+       scale: 0.8,
+     }}
    >
      <div className="w-[300px] bg-gray-800 rounded-xl overflow-hidden shadow-lg">
        <div className="relative">
@@ -42,6 +68,6 @@ export default function EventCard({event}: EventCardProp) {
          </Link>
        </div>
      </div>
-   </Link>
+   </MotionLink>
  );
 };
