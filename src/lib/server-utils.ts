@@ -1,20 +1,33 @@
 import { PrismaClient, TEvent } from "@prisma/client";
 import { capitalize } from "./utils";
 import prisma from "./db";
+import { notFound } from "next/navigation";
 
-export async function getEvents(city: string) {
+export async function getEvents(city: string, page=1) {
     const events = await prisma.tEvent.findMany({
         where: {
             city: city === "all" ? undefined : capitalize(city),
         },
         orderBy: {
             date: "asc"
-        }
+        },
+        take: 6,
+        skip: (page - 1) * 6
     })
 
-    console.log(events)
+    let totalCount;
 
-    return events
+    if (city === "all") {
+        totalCount = await prisma.tEvent.count()
+    } else {
+        totalCount = await prisma.tEvent.count({
+            where: {
+                city: capitalize(city)
+            }
+        })
+    }
+
+    return {events, totalCount}
 }
 
 export async function getEvent(slug: string):Promise<TEvent> {
@@ -23,6 +36,10 @@ export async function getEvent(slug: string):Promise<TEvent> {
             slug: slug,
         }
     });
+
+    if (!event) {
+        return notFound();
+    }
 
     return event
 }
