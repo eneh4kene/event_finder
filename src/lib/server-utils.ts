@@ -1,9 +1,10 @@
-import { PrismaClient, TEvent } from "@prisma/client";
+import "server-only"
 import { capitalize } from "./utils";
 import prisma from "./db";
 import { notFound } from "next/navigation";
+import { unstable_cache } from "next/cache";
 
-export async function getEvents(city: string, page=1) {
+export const getEvents = unstable_cache(async (city: string, page=1) => {
     const events = await prisma.tEvent.findMany({
         where: {
             city: city === "all" ? undefined : capitalize(city),
@@ -28,9 +29,9 @@ export async function getEvents(city: string, page=1) {
     }
 
     return {events, totalCount}
-}
+})
 
-export async function getEvent(slug: string):Promise<TEvent> {
+export const getEvent = unstable_cache( async (slug: string) => {
     const event = await prisma.tEvent.findUnique({
         where: {
             slug: slug,
@@ -42,4 +43,4 @@ export async function getEvent(slug: string):Promise<TEvent> {
     }
 
     return event
-}
+})
